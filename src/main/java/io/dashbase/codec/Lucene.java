@@ -34,7 +34,6 @@ public class Lucene implements CodeC {
         final int bpv = PackedInts.bitsRequired(or);
         out.writeLong(bpv);
         forUtil.encode(source, bpv, out);
-
     }
 
     public void encode(IndexOutput out, int[] values) throws IOException {
@@ -47,9 +46,7 @@ public class Lucene implements CodeC {
         final int bpv = PackedInts.bitsRequired(or);
         out.writeLong(bpv);
         forUtil.encode(source, bpv, out);
-
     }
-
 
     @Override
     public long encode(MemorySegment segment, int[] values) throws IOException {
@@ -62,7 +59,7 @@ public class Lucene implements CodeC {
         var output = new MemorySegmentOutput("test", "test_name", segment);
         output.writeLong(blockSize);
         for (int i = 0; i < blockSize; i++) {
-            var d= new long[128];
+            var d = new long[128];
             System.arraycopy(values, i * 128, d, 0, 128);
 
             encode(output, d);

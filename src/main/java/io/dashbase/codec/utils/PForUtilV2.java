@@ -8,6 +8,7 @@ import org.apache.lucene.store.DataOutput;
 import java.io.IOException;
 
 
+// JavaFastPFOR's FastPFOR128
 public class PForUtilV2 extends BasePForUtil {
     public static final int BLOCK_SIZE = 128;
 

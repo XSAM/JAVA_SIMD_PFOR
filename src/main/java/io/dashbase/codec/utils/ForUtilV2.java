@@ -6,6 +6,7 @@ import org.apache.lucene.store.DataOutput;
 
 import java.io.IOException;
 
+// JavaFastPFOR's bit packing
 public class ForUtilV2 extends BaseForUtil {
     public static int BLOCK_SIZE = 128;
 

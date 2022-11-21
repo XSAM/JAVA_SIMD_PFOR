@@ -24,6 +24,9 @@ import org.apache.lucene.util.packed.PackedInts;
 import java.io.IOException;
 import java.util.Arrays;
 
+// Copy from https://github.com/apache/lucene/blob/a18b62ded49f1b091de7029716d6f63c06a36fc0/lucene/core/src/java/org/apache/lucene/codecs/lucene90/PForUtil.java
+
+// lucene's built-in PForUtil
 /** Utility class to encode sequences of 128 small positive integers. */
 public final class PForUtil extends BasePForUtil {
 

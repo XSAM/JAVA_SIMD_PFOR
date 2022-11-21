@@ -23,11 +23,15 @@ import org.apache.lucene.store.DataOutput;
 
 import java.io.IOException;
 
+// Copy from https://github.com/apache/lucene/blob/a18b62ded49f1b091de7029716d6f63c06a36fc0/lucene/core/src/java/org/apache/lucene/codecs/lucene90/ForUtil.java#L30
+
 // Inspired from https://fulmicoton.com/posts/bitpacking/
 // Encodes multiple integers in a long to get BinaryPack-like speedups.
 // If bitsPerValue <= 8 then we pack 8 ints per long
 // else if bitsPerValue <= 16 we pack 4 ints per long
 // else we pack 2 ints per long
+//
+// lucene's built-in bit packing
 public class ForUtil extends BaseForUtil {
 
     static public final int BLOCK_SIZE = 128;

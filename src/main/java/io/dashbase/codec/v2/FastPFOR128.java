@@ -14,6 +14,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+// Copy from https://github.com/lemire/JavaFastPFOR/blob/a131d14fbc80192a0e75526f9c1b5bb82ba42e1c/src/main/java/me/lemire/integercompression/FastPFOR128.java
+
 /**
  * This class is similar to FastPFOR but uses a small block size.
  *
