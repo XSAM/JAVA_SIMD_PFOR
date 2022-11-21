@@ -16,27 +16,25 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5, time = 1)
 @Measurement(iterations = 5, time = 1)
 @Fork(3)
-@BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@BenchmarkMode(Mode.Throughput)
 public class PForUtilBenchmark {
 
     int BLOCK_SIZE = 256;
-    int SIZE = 1000;
+    int SIZE = 5120;
     long[][] mockData;
-    private PForUtil pForUtil;
     final Directory d = new ByteBuffersDirectory();
-    private PForUtilV2 pForUtilV2;
     long[] tmpInput = new long[BLOCK_SIZE];
-    long[] outArr= new long[BLOCK_SIZE];
-     BasePForUtil pForUtilV3 = new PForUtilV3();
-
+    long[] outArr = new long[BLOCK_SIZE];
+    private PForUtil luceneUtil;
+    private PForUtilV2 fastPFORUtil;
+    BasePForUtil vectorFastPFORUtil;
 
     public long[][] mockData(int size, int maxBit) {
         long[][] out = new long[size][BLOCK_SIZE];
         Random random = ThreadLocalRandom.current();
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < BLOCK_SIZE; j++) {
-                out[i][j] = random.nextInt(18);
+                out[i][j] = random.nextInt(maxBit);
             }
         }
         return out;
@@ -44,14 +42,15 @@ public class PForUtilBenchmark {
 
     @Setup(Level.Trial)
     public void setup() throws IOException {
-        mockData = mockData(SIZE, 24);
+        mockData = mockData(SIZE, 18);
 
-        pForUtil = new PForUtil(new ForUtil());
-        pForUtilV2 = new PForUtilV2();
+        luceneUtil = new PForUtil(new ForUtil());
+        fastPFORUtil = new PForUtilV2();
+        vectorFastPFORUtil = new PForUtilV3();
 
-        encode(pForUtil, "pForUtil.bin");
-        encode(pForUtilV2, "pForUtilV2.bin");
-
+        encode(luceneUtil, "lucene_test.bin");
+        encode(fastPFORUtil, "fastpfor_test.bin");
+        encode(vectorFastPFORUtil, "vector_fastpfor_test.bin");
     }
 
     @TearDown(Level.Invocation)
@@ -64,32 +63,35 @@ public class PForUtilBenchmark {
     }
 
     @Benchmark
-    public void test_v1_encode() throws IOException {
-        encode(pForUtil, "test.bin");
+    public void test_lucene_encode() throws IOException {
+        encode(luceneUtil, "test.bin");
     }
 
     @Benchmark
-    public void test_v2_encode() throws IOException {
-        encode(pForUtilV2, "test.bin");
+    public void test_fastpfor_encode() throws IOException {
+        encode(fastPFORUtil, "test.bin");
     }
 
     @Benchmark
-    public void test_v3_encode() throws IOException {
-        encode(pForUtilV3, "test.bin");
+    public void test_vector_fastpfor_encode() throws IOException {
+        encode(vectorFastPFORUtil, "test.bin");
     }
 
 
-//    @Benchmark
-//    public void testForUtilDecode() throws IOException {
-//        decode(pForUtil, "pForUtil.bin");
-//    }
-//
-//    @Benchmark
-//    public void testForUtilDecodeV2() throws IOException {
-//        decode(pForUtilV2, "pForUtilV2.bin");
-//    }
+    @Benchmark
+    public void test_lucene_decode() throws IOException {
+        decode(luceneUtil, "lucene_test.bin");
+    }
 
+    @Benchmark
+    public void test_fastpfor_decode() throws IOException {
+        decode(fastPFORUtil, "fastpfor_test.bin");
+    }
 
+    @Benchmark
+    public void test_vector_fastpfor_decode() throws IOException {
+        decode(vectorFastPFORUtil, "vector_fastpfor_test.bin");
+    }
 
     public void decode(BasePForUtil util, String fileName) throws IOException {
         var in = d.openInput(fileName, IOContext.DEFAULT);
