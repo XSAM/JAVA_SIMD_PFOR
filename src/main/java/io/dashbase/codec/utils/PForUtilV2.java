@@ -33,24 +33,24 @@ public class PForUtilV2 extends BasePForUtil {
     public void encode(long[] longs, DataOutput out) throws IOException {
         inOffset.set(0);
         outOffset.set(0);
-        for (int i = 0; i < BLOCK_SIZE; i++) {
-            intArr[i] = (int) longs[i];
+        // TODO: fix this
+        int[] data = new int[longs.length];
+        int[] compressed = new int[longs.length];
+        for (int i = 0; i < longs.length; i++) {
+            data[i] = (int) longs[i];
         }
-        fastPFOR128.encodePage(intArr, inOffset, BLOCK_SIZE, compressedArr, outOffset);
+        fastPFOR128.encodePage(data, inOffset, data.length, compressed, outOffset);
 
+        int compressedSize = outOffset.intValue();
 
 //        out.writeVInt(outOffset.get());
 //        for (int i = 0; i < outOffset.get(); i++) {
 //            out.writeInt(compressedArr[i]);
 //        }
 
-        addInt(outOffset.get(), 0);
-        for (int i = 0; i < outOffset.get(); i++) {
-            addInt(compressedArr[i], i * 4 + 4);
+        for (int i = 0; i < compressedSize; i++) {
+            out.writeInt(compressed[i]);
         }
-
-        out.writeBytes(tempByte, 0, outOffset.get() * 4 + 4);
-
     }
 
 
@@ -73,17 +73,19 @@ public class PForUtilV2 extends BasePForUtil {
     public void decode(DataInput in, long[] longs) throws IOException {
         inOffset.set(0);
         outOffset.set(0);
-        var len = in.readInt() & 0xFFFFFFFFL;
 
-        in.readBytes(tempByte, 0, (int) len * 4);
-
-        for (int i = 0; i < len; i++) {
-            compressedArr[i] = readInt(i * 4);
+        // TODO: fix this
+        int[] compressed = new int[longs.length];
+        int[] output = new int[longs.length];
+        try {
+            in.readInts(compressed, 0, compressed.length);
+        } catch (java.lang.IndexOutOfBoundsException e) {
+            // Ignore
         }
 
-        fastPFOR128.decodePage(compressedArr, inOffset, outArr, outOffset, BLOCK_SIZE);
-        for (int i = 0; i < BLOCK_SIZE; i++) {
-            longs[i] = outArr[i];
+        fastPFOR128.decodePage(compressed, inOffset, output, outOffset, compressed.length);
+        for (int i = 0; i < compressed.length; i++) {
+            longs[i] = output[i];
         }
     }
 
