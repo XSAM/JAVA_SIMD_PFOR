@@ -2,6 +2,7 @@ package io.dashbase.codec.utils;
 
 import io.dashbase.codec.v2.FastPFOR128;
 import me.lemire.integercompression.*;
+import org.apache.lucene.store.ByteBuffersIndexInput;
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 
@@ -68,17 +69,26 @@ public class PForUtilV2 extends BasePForUtil {
         inOffset.set(0);
         outOffset.set(0);
 
+        int length;
+        // TODO: this is a hack
+        if (in instanceof ByteBuffersIndexInput) {
+            length = (int) ((ByteBuffersIndexInput) in).length();
+        } else {
+            length = longs.length;
+        }
+
         // TODO: fix this
-        int[] compressed = new int[longs.length];
+        byte[] compressedBytes = new byte[length];
+        int[] compressed = new int[length/4];
         int[] output = new int[longs.length];
-        try {
-            in.readInts(compressed, 0, compressed.length);
-        } catch (java.lang.IndexOutOfBoundsException e) {
-            // Ignore
+
+        in.readBytes(compressedBytes, 0, length);
+        for (int i = 0; i < compressed.length; i++) {
+           compressed[i] = ((compressedBytes[4*i+3] & 0xFF) << 24) | ((compressedBytes[4*i+2] & 0xFF) << 16) | ((compressedBytes[4*i+1] & 0xFF) << 8) | (compressedBytes[4*i] & 0xFF);
         }
 
         codec.uncompress(compressed, inOffset, compressed.length, output, outOffset);
-        for (int i = 0; i < compressed.length; i++) {
+        for (int i = 0; i < output.length; i++) {
             longs[i] = output[i];
         }
     }
