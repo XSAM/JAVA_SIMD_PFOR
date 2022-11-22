@@ -1,7 +1,9 @@
 package io.dashbase.codec.utils;
 
 import io.dashbase.codec.v3.VectorFastPFOR;
+import me.lemire.integercompression.FastPFOR;
 import me.lemire.integercompression.IntWrapper;
+import me.lemire.integercompression.IntegerCODEC;
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 
@@ -21,6 +23,8 @@ public class PForUtilV3 extends BasePForUtil {
     public IntWrapper inOffset = new IntWrapper(0);
     public IntWrapper outOffset = new IntWrapper(0);
 
+    IntegerCODEC codec = new VectorFastPFOR();
+
     public static byte[] tempByte = new byte[4 * BLOCK_SIZE + 32];
 
 
@@ -33,27 +37,17 @@ public class PForUtilV3 extends BasePForUtil {
     public void encode(long[] longs, DataOutput out) throws IOException {
         inOffset.set(0);
         outOffset.set(0);
-        for (int i = 0; i < BLOCK_SIZE; i++) {
-            intArr[i] = (int) longs[i];
+        // TODO: fix this
+        int[] data = new int[longs.length];
+        int[] compressed = new int[longs.length];
+        for (int i = 0; i < longs.length; i++) {
+            data[i] = (int) longs[i];
         }
-        Arrays.fill(compressedArr, 0);
-        vectorFastPFOR.compress(intArr, inOffset, BLOCK_SIZE, compressedArr, outOffset);
+        codec.compress(data, inOffset, data.length, compressed, outOffset);
 
-        addInt(outOffset.get(), 0);
-        for (int i = 0; i < outOffset.get(); i++) {
-            addInt(compressedArr[i], i * 4 + 4);
+        for (int i = 0; i < outOffset.intValue(); i++) {
+            out.writeInt(compressed[i]);
         }
-
-        out.writeBytes(tempByte, 0, outOffset.get() * 4 + 4);
-
-    }
-
-
-    public void addInt(int v, int pos) {
-        tempByte[pos] = (byte) v;
-        tempByte[pos + 1] = (byte) (v >> 8);
-        tempByte[pos + 2] = (byte) (v >> 16);
-        tempByte[pos + 3] = (byte) (v >> 24);
     }
 
     public int readInt(int pos) {
@@ -68,19 +62,19 @@ public class PForUtilV3 extends BasePForUtil {
     public void decode(DataInput in, long[] longs) throws IOException {
         inOffset.set(0);
         outOffset.set(0);
-        var len = in.readInt() & 0xFFFFFFFFL;
-        Arrays.fill(compressedArr, 0);
 
-        in.readBytes(tempByte, 0, (int) len * 4);
-
-        for (int i = 0; i < len; i++) {
-            compressedArr[i] = readInt(i * 4);
+        // TODO: fix this
+        int[] compressed = new int[longs.length];
+        int[] output = new int[longs.length];
+        try {
+            in.readInts(compressed, 0, compressed.length);
+        } catch (java.lang.IndexOutOfBoundsException e) {
+            // Ignore
         }
 
-
-        vectorFastPFOR.uncompress(compressedArr, inOffset, BLOCK_SIZE, outArr, outOffset );
-        for (int i = 0; i < BLOCK_SIZE; i++) {
-            longs[i] = outArr[i];
+        codec.uncompress(compressed, inOffset, compressed.length, output, outOffset);
+        for (int i = 0; i < compressed.length; i++) {
+            longs[i] = output[i];
         }
     }
 

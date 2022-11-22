@@ -23,7 +23,7 @@ public class IntCompressionBenchmark {
     @BenchmarkMode(Mode.Throughput)
     public static abstract class AbstractBenchmark {
         int BLOCK_SIZE = 128;
-        int SIZE = 5120;
+        int SIZE = 10240;
         long[][] mockData;
         final Directory d = new ByteBuffersDirectory();
         long[] tmpInput = new long[BLOCK_SIZE];
@@ -138,12 +138,12 @@ public class IntCompressionBenchmark {
         }
     }
 
-//    public static class VectorFastPFOR extends AbstractBenchmark {
-//        @Override
-//        public void init() {
-//            util = new PForUtilV3();
-//        }
-//    }
+    public static class VectorFastPFOR extends AbstractBenchmark {
+        @Override
+        public void init() {
+            util = new PForUtilV3();
+        }
+    }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()

@@ -1,7 +1,7 @@
 package io.dashbase.codec.utils;
 
 import io.dashbase.codec.v2.FastPFOR128;
-import me.lemire.integercompression.IntWrapper;
+import me.lemire.integercompression.*;
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 
@@ -17,6 +17,7 @@ public class PForUtilV2 extends BasePForUtil {
 
     public int[] intArr = new int[BLOCK_SIZE];
     public int[] compressedArr = new int[BLOCK_SIZE];
+    IntegerCODEC codec = new FastPFOR();
 
     public IntWrapper inOffset = new IntWrapper(0);
     public IntWrapper outOffset = new IntWrapper(0);
@@ -39,16 +40,9 @@ public class PForUtilV2 extends BasePForUtil {
         for (int i = 0; i < longs.length; i++) {
             data[i] = (int) longs[i];
         }
-        fastPFOR128.encodePage(data, inOffset, data.length, compressed, outOffset);
+        codec.compress(data, inOffset, data.length, compressed, outOffset);
 
-        int compressedSize = outOffset.intValue();
-
-//        out.writeVInt(outOffset.get());
-//        for (int i = 0; i < outOffset.get(); i++) {
-//            out.writeInt(compressedArr[i]);
-//        }
-
-        for (int i = 0; i < compressedSize; i++) {
+        for (int i = 0; i < outOffset.intValue(); i++) {
             out.writeInt(compressed[i]);
         }
     }
@@ -83,7 +77,7 @@ public class PForUtilV2 extends BasePForUtil {
             // Ignore
         }
 
-        fastPFOR128.decodePage(compressed, inOffset, output, outOffset, compressed.length);
+        codec.uncompress(compressed, inOffset, compressed.length, output, outOffset);
         for (int i = 0; i < compressed.length; i++) {
             longs[i] = output[i];
         }

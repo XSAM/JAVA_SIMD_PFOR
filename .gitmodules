@@ -1,0 +1,3 @@
+[submodule "javafastpfor"]
+	path = javafastpfor
+	url = git@github.com:lemire/JavaFastPFOR.git
