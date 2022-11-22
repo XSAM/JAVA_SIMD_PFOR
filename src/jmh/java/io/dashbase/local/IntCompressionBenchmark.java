@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
 // Learn from https://github.com/openjdk/jmh/blob/master/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_24_Inheritance.java
 public class IntCompressionBenchmark {
     @State(Scope.Thread)
@@ -23,12 +25,12 @@ public class IntCompressionBenchmark {
     @Fork(3)
     @BenchmarkMode(Mode.Throughput)
     public static abstract class AbstractBenchmark {
-        int BLOCK_SIZE = 256;
+        int BLOCK_SIZE = 128;
         int SIZE = 5120;
         long[][] mockData;
         final Directory d = new ByteBuffersDirectory();
         long[] tmpInput = new long[BLOCK_SIZE];
-        long[] outArr = new long[BLOCK_SIZE];
+        long[][] tmpOutput = new long[SIZE][BLOCK_SIZE];
         BasePForUtil util;
 
         final String tmpFileName = "test.bin";
@@ -49,7 +51,7 @@ public class IntCompressionBenchmark {
         public void decode(BasePForUtil util, String fileName) throws IOException {
             var in = d.openInput(fileName, IOContext.DEFAULT);
             for (int i = 0; i < SIZE; i++) {
-                util.decode(in, outArr);
+                util.decode(in, tmpOutput[i]);
             }
             in.close();
         }
@@ -70,6 +72,11 @@ public class IntCompressionBenchmark {
             mockData = mockData(SIZE, 18);
 
             encode(util, "test2.bin");
+            decode(util, "test2.bin");
+
+            for (int i = 0; i < SIZE; i++) {
+                assertArrayEquals(mockData[i], tmpOutput[i]);
+            }
         }
 
         @TearDown
@@ -115,12 +122,12 @@ public class IntCompressionBenchmark {
         }
     }
 
-    public static class VectorFastPFOR extends AbstractBenchmark {
-        @Override
-        public void init() {
-            util = new PForUtilV3();
-        }
-    }
+//    public static class VectorFastPFOR extends AbstractBenchmark {
+//        @Override
+//        public void init() {
+//            util = new PForUtilV3();
+//        }
+//    }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
