@@ -45,7 +45,7 @@ public class PForUtilBenchmark {
         mockData = mockData(SIZE, 18);
 
         luceneUtil = new PForUtil(new ForUtil());
-        fastPFORUtil = new PForUtilV2();
+        fastPFORUtil = new PForUtilV2(BLOCK_SIZE*SIZE);
         vectorFastPFORUtil = new PForUtilV3();
 
         encode(luceneUtil, "lucene_test.bin");

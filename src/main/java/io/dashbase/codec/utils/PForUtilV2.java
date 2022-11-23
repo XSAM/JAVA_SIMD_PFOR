@@ -7,17 +7,20 @@ import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 
 import java.io.IOException;
+import sun.misc.Unsafe;
+import java.lang.reflect.Field;
 
 
 // JavaFastPFOR's FastPFOR128
 public class PForUtilV2 extends BasePForUtil {
     public static final int BLOCK_SIZE = 128;
 
-    public FastPFOR128 fastPFOR128 = new FastPFOR128();
-    public int[] outArr = new int[BLOCK_SIZE];
+    public int[] data;
+    public int[] compressed;
+    public byte[] compressedBytes;
 
-    public int[] intArr = new int[BLOCK_SIZE];
-    public int[] compressedArr = new int[BLOCK_SIZE];
+    private static final Unsafe theUnsafe;
+
     IntegerCODEC codec = new FastPFOR();
 
     public IntWrapper inOffset = new IntWrapper(0);
@@ -26,18 +29,21 @@ public class PForUtilV2 extends BasePForUtil {
     public static byte[] tempByte = new byte[4 * BLOCK_SIZE + 32];
 
 
-    public PForUtilV2() {
-
+    // The size of the input should not greater than the size of the buffer.
+    public PForUtilV2(int bufferSize) {
         super(BLOCK_SIZE);
+
+        // Init buffer
+        data = new int[bufferSize];
+        compressed = new int[bufferSize];
+        compressedBytes = new byte[bufferSize*4];
     }
 
     @Override
     public void encode(long[] longs, DataOutput out) throws IOException {
         inOffset.set(0);
         outOffset.set(0);
-        // TODO: fix this
-        int[] data = new int[longs.length];
-        int[] compressed = new int[longs.length];
+
         for (int i = 0; i < longs.length; i++) {
             data[i] = (int) longs[i];
         }
@@ -47,7 +53,6 @@ public class PForUtilV2 extends BasePForUtil {
             out.writeInt(compressed[i]);
         }
     }
-
 
     public void addInt(int v, int pos) {
         tempByte[pos] = (byte) v;
@@ -77,21 +82,26 @@ public class PForUtilV2 extends BasePForUtil {
             length = longs.length;
         }
 
-        // TODO: fix this
-        byte[] compressedBytes = new byte[length];
-        int[] compressed = new int[length/4];
-        int[] output = new int[longs.length];
+        convertDataInputToInts(in, length);
 
-        in.readBytes(compressedBytes, 0, length);
-        for (int i = 0; i < compressed.length; i++) {
-           compressed[i] = ((compressedBytes[4*i+3] & 0xFF) << 24) | ((compressedBytes[4*i+2] & 0xFF) << 16) | ((compressedBytes[4*i+1] & 0xFF) << 8) | (compressedBytes[4*i] & 0xFF);
-        }
+        codec.uncompress(compressed, inOffset, length/4, data, outOffset);
 
-        codec.uncompress(compressed, inOffset, compressed.length, output, outOffset);
-        for (int i = 0; i < output.length; i++) {
-            longs[i] = output[i];
+        convertIntToLong(longs);
+    }
+
+    private void convertIntToLong(long[] longs) {
+        for (int i = 0; i < longs.length; i++) {
+            longs[i] = data[i];
         }
     }
+
+    private void convertDataInputToInts(DataInput in, int length) throws IOException {
+        in.readBytes(compressedBytes, 0, length);
+        for (int i = 0; i < compressed.length; i++) {
+            compressed[i] = ((compressedBytes[4*i+3] & 0xFF) << 24) | ((compressedBytes[4*i+2] & 0xFF) << 16) | ((compressedBytes[4*i+1] & 0xFF) << 8) | (compressedBytes[4*i] & 0xFF);
+        }
+    }
+
 
     @Override
     public void decodeAndPrefixSum(DataInput in, long base, long[] longs) throws IOException {

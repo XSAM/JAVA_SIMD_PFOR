@@ -29,7 +29,7 @@ class PForUtilV2Test {
 
     @Test
     public void testPForUtilV2() throws IOException {
-        testEncodeDecode(new PForUtilV2());
+        testEncodeDecode(new PForUtilV2(10000 * 128));
     }
 
     @Test
@@ -39,7 +39,7 @@ class PForUtilV2Test {
 
     @Test
     public void testDeltaEncodeDecode() throws IOException {
-        testDeltaEncodeDecode(new PForUtilV2());
+        testDeltaEncodeDecode(new PForUtilV2(10000 * 128));
     }
 
     public void testEncodeDecode(BasePForUtil pForUtil) throws IOException {

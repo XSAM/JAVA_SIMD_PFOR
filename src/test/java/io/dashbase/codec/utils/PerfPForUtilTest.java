@@ -17,7 +17,7 @@ public class PerfPForUtilTest {
     long[] tmpInput = new long[128];
     long[] outArr= new long[128];
     private PForUtil pForUtil = new PForUtil(new ForUtil());
-    private PForUtilV2 pForUtilV2 = new PForUtilV2();
+    private PForUtilV2 pForUtilV2 = new PForUtilV2(SIZE);
     final Directory d = new ByteBuffersDirectory();
 
     public long[][] createMockData(int size, int maxBit) {
