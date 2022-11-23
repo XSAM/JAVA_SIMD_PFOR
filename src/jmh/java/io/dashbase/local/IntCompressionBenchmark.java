@@ -1,5 +1,6 @@
 package io.dashbase.local;
 
+import io.dashbase.codec.TurboPFORUtil;
 import io.dashbase.codec.utils.*;
 import org.apache.lucene.store.*;
 import org.openjdk.jmh.annotations.*;
@@ -142,6 +143,13 @@ public class IntCompressionBenchmark {
         @Override
         public void init() {
             util = new PForUtilV3(BLOCK_SIZE*SIZE);
+        }
+    }
+
+    public static class TurboPFOR extends AbstractBenchmark {
+        @Override
+        public void init() {
+            util = new TurboPFORUtil(BLOCK_SIZE*SIZE);
         }
     }
 

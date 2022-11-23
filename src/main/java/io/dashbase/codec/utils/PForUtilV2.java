@@ -40,9 +40,8 @@ public class PForUtilV2 extends BasePForUtil {
         inOffset.set(0);
         outOffset.set(0);
 
-        for (int i = 0; i < longs.length; i++) {
-            data[i] = (int) longs[i];
-        }
+        convertLongToInt(longs, data);
+
         codec.compress(data, inOffset, data.length, compressed, outOffset);
 
         for (int i = 0; i < outOffset.intValue(); i++) {

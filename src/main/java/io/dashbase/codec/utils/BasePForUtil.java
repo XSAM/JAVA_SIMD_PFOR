@@ -23,6 +23,12 @@ public abstract class BasePForUtil {
         }
     }
 
+    public void convertLongToInt(long[] input, int[] output) {
+        for (int i = 0; i < input.length; i++) {
+            output[i] = (int) input[i];
+        }
+    }
+
     protected BasePForUtil(int block_size) {
         BLOCK_SIZE = block_size;
     }
