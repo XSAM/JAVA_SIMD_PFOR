@@ -27,18 +27,16 @@ public class TurboPFORUtil extends BasePForUtil {
         convertLongToInt(longs, data);
 
         int length = jic.p4nenc32(data, longs.length, compressed);
+
+        // Write length as bytes
+        out.writeInt(length);
+
         out.writeBytes(compressed, length);
     }
 
     @Override
     public void decode(DataInput in, long[] longs) throws IOException {
-        int length;
-        // TODO: this is a hack
-        if (in instanceof ByteBuffersIndexInput) {
-            length = (int) ((ByteBuffersIndexInput) in).length();
-        } else {
-            length = longs.length;
-        }
+        final int length = in.readInt();
 
         in.readBytes(compressed, 0, length);
         jic.p4ndec32(compressed, longs.length, data);

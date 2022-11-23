@@ -44,6 +44,9 @@ public class PForUtilV3 extends BasePForUtil {
 
         codec.compress(data, inOffset, data.length, compressed, outOffset);
 
+        // Write length as bytes
+        out.writeInt(outOffset.intValue()*4);
+
         for (int i = 0; i < outOffset.intValue(); i++) {
             out.writeInt(compressed[i]);
         }
@@ -62,13 +65,7 @@ public class PForUtilV3 extends BasePForUtil {
         inOffset.set(0);
         outOffset.set(0);
 
-        int length;
-        // TODO: this is a hack
-        if (in instanceof ByteBuffersIndexInput) {
-            length = (int) ((ByteBuffersIndexInput) in).length();
-        } else {
-            length = longs.length;
-        }
+        final int length = in.readInt();
 
         convertDataInputToInts(in, length, compressedBytes, compressed);
 
