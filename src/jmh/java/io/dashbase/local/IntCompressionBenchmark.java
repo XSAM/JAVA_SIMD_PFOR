@@ -23,6 +23,8 @@ public class IntCompressionBenchmark {
     @Fork(3)
     @BenchmarkMode(Mode.Throughput)
     public static abstract class AbstractBenchmark {
+        @Param({"true", "false"})
+        public boolean outlierValue;
         int BLOCK_SIZE = 128;
         int SIZE = 10240;
         long[][] mockData;
@@ -36,13 +38,35 @@ public class IntCompressionBenchmark {
         long[] totalInput = new long[BLOCK_SIZE * SIZE];
         long[] totalOutput = new long[BLOCK_SIZE * SIZE];
 
-        public long[][] mockData(int size, int maxBit) {
+        float compressionRatio = 0;
+
+        public long[][] mockData(int size, int commonBit) {
+            int largeBit = commonBit + 5;
+            int maxBit = commonBit + 10;
+
             long[][] out = new long[size][BLOCK_SIZE];
             Random random = ThreadLocalRandom.current();
             int k = 0;
+            int tmp;
             for (int i = 0; i < size; i++) {
                 for (int j = 0; j < BLOCK_SIZE; j++) {
-                    out[i][j] = random.nextInt(maxBit);
+                    if (outlierValue) {
+                        if (k%5==0) {
+                            // Throwing some large values
+                            tmp = random.nextInt(largeBit);
+                        } else if (k%533 ==0) {
+                            // Throwing some large values
+                            tmp = random.nextInt(maxBit);
+                        } else {
+                            // Normal value
+                            tmp = random.nextInt(commonBit);
+                        }
+                    } else {
+                        // Normal value
+                        tmp = random.nextInt(commonBit);
+                    }
+
+                    out[i][j] = tmp;
                     totalInput[k] = out[i][j];
                     k++;
                 }
@@ -75,6 +99,8 @@ public class IntCompressionBenchmark {
             } else {
                base.encode(totalInput, out);
             }
+
+            compressionRatio = ((float)out.getFilePointer())/ (SIZE*BLOCK_SIZE*4)*100;
             out.close();
         }
 
@@ -103,6 +129,8 @@ public class IntCompressionBenchmark {
             } catch (Exception e) {
                 // ignore
             }
+
+            System.out.println("Compression Ratio: "+ compressionRatio);
         }
 
         @TearDown(Level.Invocation)
