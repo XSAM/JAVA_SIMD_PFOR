@@ -44,7 +44,7 @@ public class PForUtilV3 extends BasePForUtil {
 
         codec.compress(data, inOffset, data.length, compressed, outOffset);
 
-        // Write length as bytes
+        // Write length of bytes array
         out.writeInt(outOffset.intValue()*4);
 
         for (int i = 0; i < outOffset.intValue(); i++) {

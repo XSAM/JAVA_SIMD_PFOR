@@ -28,7 +28,7 @@ public class TurboPFORUtil extends BasePForUtil {
 
         int length = jic.p4nenc32(data, longs.length, compressed);
 
-        // Write length as bytes
+        // Write length of bytes array
         out.writeInt(length);
 
         out.writeBytes(compressed, length);
