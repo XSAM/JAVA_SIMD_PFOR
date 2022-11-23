@@ -141,7 +141,7 @@ public class IntCompressionBenchmark {
     public static class VectorFastPFOR extends AbstractBenchmark {
         @Override
         public void init() {
-            util = new PForUtilV3();
+            util = new PForUtilV3(BLOCK_SIZE*SIZE);
         }
     }
 

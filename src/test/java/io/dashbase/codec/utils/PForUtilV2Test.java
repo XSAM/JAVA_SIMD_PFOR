@@ -34,7 +34,7 @@ class PForUtilV2Test {
 
     @Test
     public void testPForUtilV3() throws IOException {
-        testEncodeDecode(new PForUtilV3());
+        testEncodeDecode(new PForUtilV3(10000 * 128));
     }
 
     @Test

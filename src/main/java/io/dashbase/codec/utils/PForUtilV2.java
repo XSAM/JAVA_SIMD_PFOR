@@ -7,8 +7,6 @@ import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 
 import java.io.IOException;
-import sun.misc.Unsafe;
-import java.lang.reflect.Field;
 
 
 // JavaFastPFOR's FastPFOR128
@@ -18,8 +16,6 @@ public class PForUtilV2 extends BasePForUtil {
     public int[] data;
     public int[] compressed;
     public byte[] compressedBytes;
-
-    private static final Unsafe theUnsafe;
 
     IntegerCODEC codec = new FastPFOR();
 
@@ -82,35 +78,11 @@ public class PForUtilV2 extends BasePForUtil {
             length = longs.length;
         }
 
-        convertDataInputToInts(in, length);
+        convertDataInputToInts(in, length, compressedBytes, compressed);
 
         codec.uncompress(compressed, inOffset, length/4, data, outOffset);
 
-        convertIntToLong(longs);
-    }
-
-    private void convertIntToLong(long[] longs) {
-        for (int i = 0; i < longs.length; i++) {
-            longs[i] = data[i];
-        }
-    }
-
-    private void convertDataInputToInts(DataInput in, int length) throws IOException {
-        in.readBytes(compressedBytes, 0, length);
-        theUnsafe.copyMemory(compressedBytes, Unsafe.ARRAY_BYTE_BASE_OFFSET, compressed, Unsafe.ARRAY_INT_BASE_OFFSET, length);
-//        for (int i = 0; i < compressed.length; i++) {
-//            compressed[i] = ((compressedBytes[4*i+3] & 0xFF) << 24) | ((compressedBytes[4*i+2] & 0xFF) << 16) | ((compressedBytes[4*i+1] & 0xFF) << 8) | (compressedBytes[4*i] & 0xFF);
-//        }
-    }
-
-    static {
-        try {
-            Field f = Unsafe.class.getDeclaredField("theUnsafe");
-            f.setAccessible(true);
-            theUnsafe = (Unsafe) f.get(null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        convertIntToLong(data, longs);
     }
 
     @Override
