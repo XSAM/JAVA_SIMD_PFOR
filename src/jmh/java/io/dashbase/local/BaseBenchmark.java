@@ -46,6 +46,7 @@ public class BaseBenchmark {
 
                 mockData[i][j] = tmp;
                 flatMockData[k] = mockData[i][j];
+                flatMockIntData[k] = (int) mockData[i][j];
                 k++;
             }
         }
