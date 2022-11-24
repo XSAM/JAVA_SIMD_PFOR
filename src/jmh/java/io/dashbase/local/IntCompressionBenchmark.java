@@ -1,8 +1,7 @@
 package io.dashbase.local;
 
+import io.dashbase.codec.TurboPFORUtil;
 import io.dashbase.codec.utils.*;
-import me.lemire.integercompression.FastPFOR;
-import me.lemire.integercompression.IntegerCODEC;
 import org.apache.lucene.store.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
@@ -124,19 +123,19 @@ public class IntCompressionBenchmark {
         }
     }
 
-//    public static class VectorFastPFOR extends AbstractBenchmark {
-//        @Override
-//        public void init() {
-//            util = new PForUtilV3(BLOCK_SIZE*SIZE);
-//        }
-//    }
+    public static class VectorFastPFOR extends AbstractBenchmark {
+        @Override
+        public void init() {
+            util = new PForUtilV3(BLOCK_SIZE*SIZE);
+        }
+    }
 
-//    public static class TurboPFOR extends AbstractBenchmark {
-//        @Override
-//        public void init() {
-//            util = new TurboPFORUtil(BLOCK_SIZE*SIZE);
-//        }
-//    }
+    public static class TurboPFOR extends AbstractBenchmark {
+        @Override
+        public void init() {
+            util = new TurboPFORUtil(BLOCK_SIZE*SIZE);
+        }
+    }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()

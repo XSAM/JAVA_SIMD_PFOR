@@ -1,6 +1,6 @@
 package io.dashbase.codec.utils;
 
-import io.dashbase.codec.v3.VectorFastPFOR;
+import me.lemire.integercompression.vector.VectorFastPFOR;
 import me.lemire.integercompression.FastPFOR;
 import me.lemire.integercompression.IntWrapper;
 import me.lemire.integercompression.IntegerCODEC;
