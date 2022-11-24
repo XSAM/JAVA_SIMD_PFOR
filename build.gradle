@@ -11,8 +11,16 @@ repositories {
     mavenCentral()
 }
 
+task compileMavenProject(type: Exec) {
+    workingDir "javafastpfor/"
+    commandLine "mvn", "clean", "compile"
+}
+
 dependencies {
-    implementation 'me.lemire.integercompression:JavaFastPFOR:0.1.12'
+//    implementation 'me.lemire.integercompression:JavaFastPFOR:0.1.12'
+    implementation files("javafastpfor/target/classes") {
+        builtBy "compileMavenProject"
+    }
     implementation 'org.apache.lucene:lucene-core:9.3.0'
     testImplementation 'org.apache.lucene:lucene-core:9.3.0'
 
