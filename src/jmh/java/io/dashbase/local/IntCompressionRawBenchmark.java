@@ -50,10 +50,10 @@ public class IntCompressionRawBenchmark {
     }
 
     public static class Lucene extends AbstractBenchmark {
-        final Directory d = new ByteBuffersDirectory();
+        byte[] buffer;
+        ByteArrayDataInput input;
+        ByteArrayDataOutput output;
         PForUtil util = new PForUtil(new ForUtil());
-
-        String tmpFilename = "test.bin";
 
         @Override
         public void init() {
@@ -61,44 +61,33 @@ public class IntCompressionRawBenchmark {
 
         @Override
         public void verify() throws IOException {
-            tmpFilename = "test2.bin";
+            buffer = new byte[SIZE*BLOCK_SIZE*8];
+            input = new ByteArrayDataInput(buffer);
+            output = new ByteArrayDataOutput(buffer);
             encode();
             decode();
 
             for (int i = 0; i < SIZE; i++) {
                 assertArrayEquals(mockData[i], tmpOutput[i]);
             }
-
-            tmpFilename = "test.bin";
         }
 
         @Override
         public void encode() throws IOException {
-            IndexOutput out = d.createOutput(tmpFilename, IOContext.DEFAULT);
+            output.reset(buffer);
 
             for (int i = 0; i < SIZE; i++) {
                 System.arraycopy(mockData[i], 0, tmpInput, 0, BLOCK_SIZE);
-                util.encode(tmpInput, out);
+                util.encode(tmpInput, output);
             }
-            out.close();
         }
 
         @Override
         public void decode() throws IOException {
-            var in = d.openInput("test2.bin", IOContext.DEFAULT);
+            input.reset(buffer);
 
             for (int i = 0; i < SIZE; i++) {
-                util.decode(in, tmpOutput[i]);
-            }
-            in.close();
-        }
-
-        @TearDown(Level.Invocation)
-        public void tearDown() throws IOException {
-            try {
-                d.deleteFile(tmpFilename);
-            } catch (Exception e) {
-                // ignore
+                util.decode(input, tmpOutput[i]);
             }
         }
     }
