@@ -149,7 +149,7 @@ public class IntCompressionRawBenchmark {
     }
 
     public static class TurboPFOR extends AbstractBenchmark {
-        byte[] compressed = new byte[BLOCK_SIZE*SIZE];
+        byte[] compressed = new byte[BLOCK_SIZE*SIZE*4];
         int[] uncompressed = new int[BLOCK_SIZE*SIZE];
         int compressedLength;
 
@@ -172,7 +172,7 @@ public class IntCompressionRawBenchmark {
 
         @Override
         public void decode() throws IOException {
-            jic.p4ndec32(compressed, compressedLength, uncompressed);
+            jic.p4ndec32(compressed, uncompressed.length, uncompressed);
         }
     }
 
