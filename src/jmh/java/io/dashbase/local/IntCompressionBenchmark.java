@@ -1,7 +1,8 @@
 package io.dashbase.local;
 
-import io.dashbase.codec.TurboPFORUtil;
 import io.dashbase.codec.utils.*;
+import me.lemire.integercompression.FastPFOR;
+import me.lemire.integercompression.IntegerCODEC;
 import org.apache.lucene.store.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
@@ -10,8 +11,6 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.io.IOException;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -22,57 +21,15 @@ public class IntCompressionBenchmark {
     @Measurement(iterations = 5, time = 1)
     @Fork(3)
     @BenchmarkMode(Mode.Throughput)
-    public static abstract class AbstractBenchmark {
-        @Param({"true", "false"})
+    public static abstract class AbstractBenchmark extends BaseBenchmark {
+        @Param({"true"})
         public boolean outlierValue;
-        int BLOCK_SIZE = 128;
-        int SIZE = 10240;
-        long[][] mockData;
         final Directory d = new ByteBuffersDirectory();
-        long[] tmpInput = new long[BLOCK_SIZE];
-        long[][] tmpOutput = new long[SIZE][BLOCK_SIZE];
         BasePForUtil util;
 
         final String tmpFileName = "test.bin";
 
-        long[] totalInput = new long[BLOCK_SIZE * SIZE];
-        long[] totalOutput = new long[BLOCK_SIZE * SIZE];
-
         float compressionRatio = 0;
-
-        public long[][] mockData(int size, int commonBit) {
-            int largeBit = commonBit + 5;
-            int maxBit = commonBit + 10;
-
-            long[][] out = new long[size][BLOCK_SIZE];
-            Random random = ThreadLocalRandom.current();
-            int k = 0;
-            int tmp;
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < BLOCK_SIZE; j++) {
-                    if (outlierValue) {
-                        if (k%5==0) {
-                            // Throwing some large values
-                            tmp = random.nextInt(largeBit);
-                        } else if (k%533 ==0) {
-                            // Throwing some large values
-                            tmp = random.nextInt(maxBit);
-                        } else {
-                            // Normal value
-                            tmp = random.nextInt(commonBit);
-                        }
-                    } else {
-                        // Normal value
-                        tmp = random.nextInt(commonBit);
-                    }
-
-                    out[i][j] = tmp;
-                    totalInput[k] = out[i][j];
-                    k++;
-                }
-            }
-            return out;
-        }
 
         public abstract void init();
 
@@ -83,7 +40,7 @@ public class IntCompressionBenchmark {
                     util.decode(in, tmpOutput[i]);
                 }
             } else {
-                util.decode(in, totalOutput);
+                util.decode(in, tmpFlatOutput);
             }
             in.close();
         }
@@ -97,7 +54,7 @@ public class IntCompressionBenchmark {
                     base.encode(tmpInput, out);
                 }
             } else {
-               base.encode(totalInput, out);
+               base.encode(flatMockData, out);
             }
 
             compressionRatio = ((float)out.getFilePointer())/ (SIZE*BLOCK_SIZE*4)*100;
@@ -108,13 +65,13 @@ public class IntCompressionBenchmark {
         public void setup() throws IOException {
             init();
 
-            mockData = mockData(SIZE, 18);
+            generateMockData(SIZE, 18, outlierValue);
 
             encode(util, "test2.bin");
             decode(util, "test2.bin");
 
             if (!(util instanceof PForUtil)) {
-                assertArrayEquals(totalInput, totalOutput);
+                assertArrayEquals(flatMockData, tmpFlatOutput);
             } else {
                 for (int i = 0; i < SIZE; i++) {
                     assertArrayEquals(mockData[i], tmpOutput[i]);
@@ -167,19 +124,19 @@ public class IntCompressionBenchmark {
         }
     }
 
-    public static class VectorFastPFOR extends AbstractBenchmark {
-        @Override
-        public void init() {
-            util = new PForUtilV3(BLOCK_SIZE*SIZE);
-        }
-    }
+//    public static class VectorFastPFOR extends AbstractBenchmark {
+//        @Override
+//        public void init() {
+//            util = new PForUtilV3(BLOCK_SIZE*SIZE);
+//        }
+//    }
 
-    public static class TurboPFOR extends AbstractBenchmark {
-        @Override
-        public void init() {
-            util = new TurboPFORUtil(BLOCK_SIZE*SIZE);
-        }
-    }
+//    public static class TurboPFOR extends AbstractBenchmark {
+//        @Override
+//        public void init() {
+//            util = new TurboPFORUtil(BLOCK_SIZE*SIZE);
+//        }
+//    }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
